@@ -1,0 +1,11 @@
+# GitHub Pages config
+# Ensures Jekyll doesn't interfere with our static SPA
+
+# Allow serving of JavaScript module files
+# and disable Jekyll processing
+exclude:
+  - node_modules
+  - "*.config.js"
+
+# No Jekyll theme — pure static HTML
+theme: null
