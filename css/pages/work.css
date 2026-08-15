@@ -1,0 +1,163 @@
+/* ================================================================
+   WORK.CSS — Work Page Bento Grid (dark navy theme)
+   ================================================================ */
+
+#page-work {
+  padding: var(--gap);
+  overflow-y: auto;
+  align-items: stretch;
+}
+
+.work-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-height: 0;
+}
+
+/* ---- Card Base ---- */
+.work-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.work-card-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.15);
+}
+
+/* ---- TradingView — Large ---- */
+.work-tv-card {
+  min-height: 400px;
+  flex: 2;
+  background: #080f1c !important;
+  border-color: rgba(26,189,212,0.10) !important;
+}
+
+.tradingview-embed {
+  flex: 1; min-height: 0; width: 100%;
+}
+.tradingview-embed > div,
+.tradingview-embed iframe {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 360px;
+  border: none;
+}
+
+/* ---- Bottom Grid (4 cards) ---- */
+.work-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+  min-height: 220px;
+}
+
+/* Specific card tints */
+#page-work .work-card:nth-child(1) { background: #120f28 !important; border-color: rgba(88,101,242,0.15) !important; }
+#page-work .work-bottom-grid .work-card:nth-child(2) { background: var(--card-green) !important; border-color: rgba(34,197,94,0.10) !important; }
+#page-work .work-bottom-grid .work-card:nth-child(3) { background: #12181e !important; }
+#page-work .work-bottom-grid .work-card:nth-child(4) { background: #1a0f1a !important; border-color: rgba(239,68,68,0.10) !important; }
+
+/* ---- iframe ---- */
+.iframe-wrapper {
+  flex: 1; min-height: 0; overflow: hidden;
+}
+.iframe-wrapper iframe {
+  width: 100%; height: 100%;
+  min-height: 180px; border: none;
+}
+
+/* ---- Blocked / Launch Card ---- */
+.iframe-blocked-card {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; padding: 20px; text-align: center;
+}
+
+.blocked-app-icon { font-size: 30px; }
+.blocked-app-name {
+  font-size: 14px; font-weight: 700;
+  color: var(--text);
+}
+.blocked-app-desc {
+  font-size: 11px; color: var(--text2); line-height: 1.5;
+}
+
+.launch-btn-full {
+  margin-top: 6px;
+  display: inline-flex; align-items: center;
+  padding: 9px 20px;
+  background: linear-gradient(135deg, #3a3f9e, #5865F2);
+  border: none; border-radius: var(--r-sm);
+  color: white; font-family: inherit;
+  font-size: 13px; font-weight: 700;
+  text-decoration: none; cursor: pointer;
+  transition: all var(--dur) ease;
+  box-shadow: 0 4px 14px rgba(88,101,242,0.4);
+}
+.launch-btn-full:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(88,101,242,0.55);
+}
+
+/* ---- Dual Launch (Bookmap + Coinglass) ---- */
+.dual-launch-grid {
+  flex: 1;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 14px;
+}
+
+.dual-launch-btn {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; padding: 14px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  transition: all var(--dur) ease; text-align: center;
+}
+.dual-launch-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--border2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.dual-icon { font-size: 26px; }
+.dual-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.dual-sub  { font-size: 10px; color: var(--accent); font-weight: 600; }
+
+/* ---- Fear & Greed ---- */
+.fng-container {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 10px; gap: 5px;
+}
+
+.fng-gauge-wrapper { width: 100px; height: 100px; }
+.fng-svg { width: 100%; height: 100%; }
+.fng-label { font-size: 13px; font-weight: 700; color: var(--text); text-align: center; }
+.fng-sublabel {
+  font-size: 9px; color: var(--text3); text-align: center;
+  text-transform: uppercase; letter-spacing: 0.07em;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1200px) { .work-bottom-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px)  { .work-bottom-grid { grid-template-columns: 1fr; } }

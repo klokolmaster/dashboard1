@@ -1,0 +1,136 @@
+/* ================================================================
+   HEADER.CSS — Slim Dark Header (no glassmorphism)
+   ================================================================ */
+
+#app-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--hh);
+  z-index: 100;
+  background: rgba(6, 13, 22, 0.92);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03), 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 20px;
+  gap: 16px;
+  max-width: 2000px;
+  margin: 0 auto;
+}
+
+/* ---- Search ---- */
+.search-container {
+  flex: 1;
+  max-width: 440px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-pill);
+  padding: 8px 16px;
+  cursor: text;
+  transition: all var(--dur) ease;
+}
+
+.search-bar:focus-within {
+  background: #162438;
+  border-color: rgba(26,189,212,0.30);
+  box-shadow: 0 0 0 3px rgba(26,189,212,0.07), var(--accent-glow);
+}
+
+.search-icon {
+  width: 15px; height: 15px;
+  color: var(--text3);
+  flex-shrink: 0;
+  transition: color var(--dur) ease;
+}
+.search-bar:focus-within .search-icon { color: var(--accent); }
+
+#search-input {
+  flex: 1;
+  background: transparent;
+  border: none; outline: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  caret-color: var(--accent);
+  min-width: 0;
+}
+#search-input::placeholder { color: var(--text3); }
+
+/* ---- Right section ---- */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ---- DateTime ---- */
+.datetime-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.time-display {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.date-display {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text2);
+  line-height: 1;
+}
+
+.tz-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(26,189,212,0.18);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ---- Settings button ---- */
+.settings-toggle {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all var(--dur) ease;
+  flex-shrink: 0;
+}
+.settings-toggle svg { width: 16px; height: 16px; transition: transform 300ms var(--ease); }
+.settings-toggle:hover {
+  background: var(--accent-dim);
+  border-color: rgba(26,189,212,0.25);
+  color: var(--accent);
+  box-shadow: var(--accent-glow);
+}
+.settings-toggle:hover svg { transform: rotate(60deg); }
+.settings-toggle:active { transform: scale(0.95); }
