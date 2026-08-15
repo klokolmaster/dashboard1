@@ -4,128 +4,116 @@
 
 (function () {
 
-  /* ---- Coin ID mapping: ticker → CoinGecko ID ---- */
-  const COINGECKO_IDS = {
-    BTC:   'bitcoin',
-    ETH:   'ethereum',
-    SOL:   'solana',
-    BNB:   'binancecoin',
-    XRP:   'ripple',
-    ADA:   'cardano',
-    DOGE:  'dogecoin',
-    AVAX:  'avalanche-2',
-    DOT:   'polkadot',
-    LINK:  'chainlink',
-    UNI:   'uniswap',
-    MATIC: 'matic-network',
-    LTC:   'litecoin',
-    ATOM:  'cosmos',
-    FIL:   'filecoin'
+  /* ---- Coin mappings ---- */
+  const COIN_META = {
+    BTC:   { id: 'bitcoin',      logoClass: 'logo-btc',   sym: '₿' },
+    ETH:   { id: 'ethereum',     logoClass: 'logo-eth',   sym: 'Ξ' },
+    SOL:   { id: 'solana',       logoClass: 'logo-sol',   sym: '◎' },
+    BNB:   { id: 'binancecoin',  logoClass: 'logo-bnb',   sym: 'B' },
+    XRP:   { id: 'ripple',       logoClass: 'logo-xrp',   sym: '✕' },
+    ADA:   { id: 'cardano',      logoClass: 'logo-ada',   sym: '₳' },
+    DOGE:  { id: 'dogecoin',     logoClass: 'logo-doge',  sym: 'Ð' },
+    AVAX:  { id: 'avalanche-2',  logoClass: 'logo-avax',  sym: 'A' },
+    DOT:   { id: 'polkadot',     logoClass: 'logo-dot',   sym: '●' },
+    LINK:  { id: 'chainlink',    logoClass: 'logo-link',  sym: '⬡' },
+    UNI:   { id: 'uniswap',      logoClass: 'logo-uni',   sym: '🦄' },
+    MATIC: { id: 'matic-network',logoClass: 'logo-matic', sym: 'M' },
   };
 
-  /* ---- Bybit TradingView symbol ---- */
-  function bybitTVSymbol(ticker) {
-    return `BYBIT:${ticker}USDT`;
+  function getMeta(ticker) {
+    return COIN_META[ticker.toUpperCase()] || { id: ticker.toLowerCase(), logoClass: 'logo-default', sym: ticker.charAt(0) };
   }
 
-  /* ========================================================
-     1. USD → IDR FOREX
-     ======================================================== */
+  function bybitTV(ticker) {
+    return `https://www.tradingview.com/chart/?symbol=BYBIT:${ticker.toUpperCase()}USDT`;
+  }
+
+  /* ============================================================
+     1. FOREX — USD → IDR
+     ============================================================ */
 
   async function fetchForex() {
-    const endpoints = [
+    const urls = [
       'https://open.er-api.com/v6/latest/USD',
       'https://api.frankfurter.app/latest?from=USD&to=IDR'
     ];
-
-    for (const url of endpoints) {
+    for (const url of urls) {
       try {
-        const res  = await fetch(url, { signal: AbortSignal.timeout(6000) });
+        const res  = await fetch(url, { signal: AbortSignal.timeout(7000) });
         const data = await res.json();
-
-        // open.er-api.com
-        if (data.rates && data.rates.IDR) {
-          return { rate: data.rates.IDR, source: 'open.er-api.com', success: true };
-        }
-        // frankfurter.app
-        if (data.rates && data.rates.IDR) {
-          return { rate: data.rates.IDR, source: 'frankfurter.app', success: true };
-        }
-      } catch (_) { /* try next */ }
+        if (data.rates?.IDR) return { rate: data.rates.IDR, success: true, src: new URL(url).hostname };
+      } catch (_) {}
     }
     return { success: false };
   }
 
-  function renderForex(result) {
+  function renderForex(res) {
     const card = document.getElementById('forex-card');
     if (!card) return;
 
-    if (!result.success) {
+    if (!res.success) {
       card.innerHTML = `
         <div class="error-state">
           <div class="error-icon">⚠️</div>
-          <div>Exchange rate unavailable</div>
+          <div>Rate unavailable</div>
           <a href="https://www.xe.com/currencyconverter/convert/?Amount=1&From=USD&To=IDR" target="_blank" rel="noopener">View on XE ↗</a>
         </div>`;
       return;
     }
 
-    const formatted = new Intl.NumberFormat('id-ID', {
-      maximumFractionDigits: 0
-    }).format(Math.round(result.rate));
+    const fmt = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
 
     card.innerHTML = `
-      <div class="forex-content">
-        <div class="forex-flag-pair">
-          <span class="forex-flag">🇺🇸</span>
-          <span class="forex-flag">→</span>
-          <span class="forex-flag">🇮🇩</span>
-          <span class="forex-pair-label">USD / IDR</span>
+      <div class="forex-card-inner">
+        <div class="forex-top">
+          <div class="forex-pair-row">
+            <span class="forex-flag">🇺🇸</span>
+            <span class="forex-arrow">→</span>
+            <span class="forex-flag">🇮🇩</span>
+            <span class="forex-pair-label">USD / IDR</span>
+          </div>
+          <div class="icon-badge badge-teal">💱</div>
         </div>
-        <div class="forex-rate-main">${formatted}</div>
-        <div class="forex-rate-sub">1 US Dollar</div>
-        <div class="forex-source">via ${result.source} · live</div>
+        <div class="forex-rate-value">${fmt.format(Math.round(res.rate))}</div>
+        <div class="forex-rate-unit">per 1 US Dollar</div>
+        <div class="forex-source">
+          <div class="forex-source-dot"></div>
+          <span>Live · ${res.src || 'open.er-api.com'}</span>
+        </div>
       </div>`;
   }
 
-  /* ========================================================
-     2. CRYPTO PRICES (CoinGecko — free, no key)
-     ======================================================== */
+  /* ============================================================
+     2. CRYPTO PRICES — CoinGecko (free)
+     ============================================================ */
 
   async function fetchCrypto() {
-    const coins = (Config.get('crypto').coins || ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'])
-      .slice(0, 5);
-
-    const ids = coins
-      .map(c => COINGECKO_IDS[c.toUpperCase()] || c.toLowerCase())
-      .join(',');
-
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&precision=4`;
-
+    const coins = (Config.get('crypto').coins || ['BTC','ETH','SOL','BNB','XRP']).slice(0, 5);
+    const ids   = coins.map(c => getMeta(c).id).join(',');
+    const url   = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&precision=4`;
     try {
-      const res  = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      const res  = await fetch(url, { signal: AbortSignal.timeout(9000) });
       const data = await res.json();
       return { success: true, data, coins };
     } catch (e) {
-      console.warn('[Crypto] Fetch failed:', e);
       return { success: false, coins };
     }
   }
 
-  function formatPrice(price) {
-    if (price === null || price === undefined) return 'N/A';
-    if (price >= 10000) return '$' + new Intl.NumberFormat('en-US').format(Math.round(price));
-    if (price >= 1)     return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (price >= 0.01)  return '$' + price.toFixed(4);
-    return '$' + price.toFixed(6);
+  function fmtPrice(p) {
+    if (p == null) return 'N/A';
+    if (p >= 10000) return '$' + new Intl.NumberFormat('en-US').format(Math.round(p));
+    if (p >= 1)     return '$' + p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (p >= 0.01)  return '$' + p.toFixed(4);
+    return '$' + p.toFixed(6);
   }
 
-  function renderCrypto(result) {
-    const container = document.getElementById('crypto-list');
-    if (!container) return;
+  function renderCrypto(res) {
+    const el = document.getElementById('crypto-list');
+    if (!el) return;
 
-    if (!result.success) {
-      container.innerHTML = `
+    if (!res.success) {
+      el.innerHTML = `
         <div class="error-state">
           <div class="error-icon">⚠️</div>
           <div>Prices unavailable</div>
@@ -134,100 +122,81 @@
       return;
     }
 
-    const { data, coins } = result;
     let html = '';
-
-    coins.forEach(ticker => {
-      const id     = COINGECKO_IDS[ticker.toUpperCase()] || ticker.toLowerCase();
-      const info   = data[id];
+    res.coins.forEach(ticker => {
+      const meta   = getMeta(ticker);
+      const info   = res.data[meta.id];
       if (!info) return;
 
       const price  = info.usd;
       const change = info.usd_24h_change || 0;
       const isUp   = change >= 0;
       const sign   = isUp ? '+' : '';
-      const cls    = isUp ? 'positive' : 'negative';
-      const tvURL  = `https://www.tradingview.com/chart/?symbol=${bybitTVSymbol(ticker.toUpperCase())}`;
 
       html += `
-        <a href="${tvURL}" target="_blank" rel="noopener" class="crypto-row" title="Open ${ticker} on TradingView (Bybit)">
+        <a href="${bybitTV(ticker)}" target="_blank" rel="noopener" class="crypto-row"
+           title="Open ${ticker.toUpperCase()} on TradingView (Bybit)">
           <div class="crypto-row-left">
-            <div class="crypto-coin-symbol">${ticker.toUpperCase()}</div>
-            <div class="crypto-coin-name">${id.replace(/-/g, ' ')}</div>
+            <div class="crypto-logo ${meta.logoClass}">${meta.sym}</div>
+            <div class="crypto-info">
+              <div class="crypto-symbol">${ticker.toUpperCase()}</div>
+              <div class="crypto-name">${meta.id.replace(/-/g,' ')}</div>
+            </div>
           </div>
           <div class="crypto-row-right">
-            <div class="crypto-price">${formatPrice(price)}</div>
-            <div class="crypto-change ${cls}">${sign}${change.toFixed(2)}%</div>
+            <div class="crypto-price">${fmtPrice(price)}</div>
+            <div class="crypto-change ${isUp ? 'positive' : 'negative'}">${sign}${change.toFixed(2)}%</div>
           </div>
         </a>`;
     });
 
-    container.innerHTML = html || `<div class="error-state"><div>No data available</div></div>`;
+    el.innerHTML = html || `<div class="error-state"><div>No data</div></div>`;
   }
 
-  /* ========================================================
-     3. ECONOMIC CALENDAR (Forex Factory / CORS proxy)
-     ======================================================== */
+  /* ============================================================
+     3. ECONOMIC CALENDAR — Forex Factory
+     ============================================================ */
 
-  const FF_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
-  const CORS_PROXIES = [
+  const FF_URL     = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+  const PROXIES    = [
     (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
     (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`
   ];
 
-  async function fetchEconCalendar() {
-    // Try direct first, then proxies
-    const urls = [
-      FF_URL,
-      ...CORS_PROXIES.map(fn => fn(FF_URL))
-    ];
-
-    for (const url of urls) {
+  async function fetchEcon() {
+    const tries = [FF_URL, ...PROXIES.map(fn => fn(FF_URL))];
+    for (const url of tries) {
       try {
-        const res  = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        const res  = await fetch(url, { signal: AbortSignal.timeout(9000) });
         let   data = await res.json();
-
-        // allorigins wraps in { contents: "..." }
-        if (data && data.contents) {
-          data = JSON.parse(data.contents);
-        }
-
+        if (data?.contents) data = JSON.parse(data.contents);
         if (Array.isArray(data)) return data;
-      } catch (_) { /* try next */ }
+      } catch (_) {}
     }
     return null;
   }
 
-  /* Convert Forex Factory Eastern Time string to WIB
-     FF times are in US Eastern (ET): EDT=UTC-4, EST=UTC-5
-     WIB = UTC+7 → WIB = ET + 11h (summer/EDT) or +12h (winter/EST)
-     We use a fixed +11h approximation (good enough for display). */
-  function etToWIB(timeStr) {
-    if (!timeStr || timeStr === 'All Day' || timeStr === '') return 'All Day';
-    try {
-      // timeStr like "8:30am" or "2:00pm"
-      const match = timeStr.match(/^(\d{1,2}):(\d{2})(am|pm)$/i);
-      if (!match) return timeStr;
-
-      let [, h, m, meridiem] = match;
-      h = parseInt(h, 10);
-      m = parseInt(m, 10);
-
-      if (meridiem.toLowerCase() === 'pm' && h !== 12) h += 12;
-      if (meridiem.toLowerCase() === 'am' && h === 12) h  = 0;
-
-      // Add 11 hours for EDT → WIB
-      const wibH = (h + 11) % 24;
-      return `${String(wibH).padStart(2, '0')}:${String(m).padStart(2, '0')} WIB`;
-    } catch (_) { return timeStr; }
+  function etToWIB(t) {
+    if (!t || t === 'All Day' || t === '') return 'All Day';
+    const m = t.match(/^(\d{1,2}):(\d{2})(am|pm)$/i);
+    if (!m) return t;
+    let [, h, min, mer] = m;
+    h = parseInt(h); min = parseInt(min);
+    if (mer.toLowerCase() === 'pm' && h !== 12) h += 12;
+    if (mer.toLowerCase() === 'am' && h === 12) h = 0;
+    return `${String((h + 11) % 24).padStart(2,'0')}:${String(min).padStart(2,'0')} WIB`;
   }
 
-  function renderEconCalendar(events) {
-    const container = document.getElementById('econ-list');
-    if (!container) return;
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderEcon(events) {
+    const el = document.getElementById('econ-list');
+    if (!el) return;
 
     if (!events) {
-      container.innerHTML = `
+      el.innerHTML = `
         <div class="error-state">
           <div class="error-icon">📅</div>
           <div>Calendar unavailable</div>
@@ -236,13 +205,10 @@
       return;
     }
 
-    // Filter: USD + High impact
-    const highImpact = events.filter(e =>
-      e.country === 'USD' && e.impact === 'High'
-    );
+    const high = events.filter(e => e.country === 'USD' && e.impact === 'High');
 
-    if (highImpact.length === 0) {
-      container.innerHTML = `
+    if (!high.length) {
+      el.innerHTML = `
         <div class="error-state">
           <div class="error-icon">✅</div>
           <div>No high-impact USD events this week</div>
@@ -250,96 +216,61 @@
       return;
     }
 
-    // Group by date
     const byDate = {};
-    highImpact.forEach(ev => {
-      const key = ev.date ? ev.date.split('T')[0] : 'Unknown';
-      if (!byDate[key]) byDate[key] = [];
-      byDate[key].push(ev);
+    high.forEach(e => {
+      const k = (e.date || '').split('T')[0] || 'Unknown';
+      (byDate[k] = byDate[k] || []).push(e);
     });
 
-    const dayShort   = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-    const monthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
+    const DS = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+    const MS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
     let html = '';
 
-    Object.keys(byDate).sort().forEach(dateKey => {
-      const evs = byDate[dateKey];
-      let dateLabel = dateKey;
-      try {
-        const d = new Date(dateKey + 'T12:00:00Z');
-        dateLabel = `${dayShort[d.getUTCDay()]}, ${d.getUTCDate()} ${monthShort[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-      } catch (_) {}
-
-      html += `<div class="econ-date-group">
-        <div class="econ-date-label">${dateLabel}</div>`;
-
-      evs.forEach(ev => {
-        const time     = etToWIB(ev.time || '');
-        const name     = ev.title || 'Unknown Event';
-        const actual   = ev.actual   || '';
-        const forecast = ev.forecast || '-';
-        const previous = ev.previous || '-';
-        const hasActual = actual && actual.trim() !== '';
-
+    Object.keys(byDate).sort().forEach(k => {
+      let lbl = k;
+      try { const d = new Date(k+'T12:00:00Z'); lbl = `${DS[d.getUTCDay()]}, ${d.getUTCDate()} ${MS[d.getUTCMonth()]}`; } catch(_) {}
+      html += `<div class="econ-date-group"><div class="econ-date-label">${lbl}</div>`;
+      byDate[k].forEach(ev => {
+        const actual = ev.actual || '';
         html += `
           <div class="econ-event">
-            <div class="econ-event-time">${time}</div>
+            <div class="econ-event-time">${etToWIB(ev.time||'')}</div>
             <div class="econ-event-info">
-              <div class="econ-event-name">${escapeHtml(name)}</div>
+              <div class="econ-event-name">${esc(ev.title||'')}</div>
               <div class="econ-event-data">
-                ${hasActual ? `<span class="econ-actual">A: ${escapeHtml(actual)}</span>` : ''}
-                <span class="econ-forecast">F: ${escapeHtml(forecast)}</span>
-                <span class="econ-previous">P: ${escapeHtml(previous)}</span>
+                ${actual ? `<span class="econ-actual">A: ${esc(actual)}</span>` : ''}
+                <span class="econ-forecast">F: ${esc(ev.forecast||'-')}</span>
+                <span class="econ-previous">P: ${esc(ev.previous||'-')}</span>
               </div>
             </div>
           </div>`;
       });
-
       html += '</div>';
     });
 
-    container.innerHTML = html;
+    el.innerHTML = html;
   }
 
-  /* ========================================================
-     INIT — called once when Home page first opens
-     ======================================================== */
-
-  let _refreshInterval = null;
+  /* ============================================================
+     INIT
+     ============================================================ */
+  let _timer = null;
 
   async function initHomePage() {
-    // Parallel fetch
-    const [forexResult, cryptoResult] = await Promise.all([
-      fetchForex(),
-      fetchCrypto()
-    ]);
+    if (_timer) clearInterval(_timer);
 
-    renderForex(forexResult);
-    renderCrypto(cryptoResult);
+    const [fx, crypto] = await Promise.all([fetchForex(), fetchCrypto()]);
+    renderForex(fx);
+    renderCrypto(crypto);
+    fetchEcon().then(renderEcon);
 
-    // Econ calendar (separate, slower)
-    fetchEconCalendar().then(renderEconCalendar);
-
-    // Auto-refresh every 60 seconds
-    if (_refreshInterval) clearInterval(_refreshInterval);
-    _refreshInterval = setInterval(async () => {
-      const [fx, crypto] = await Promise.all([fetchForex(), fetchCrypto()]);
-      renderForex(fx);
-      renderCrypto(crypto);
+    _timer = setInterval(async () => {
+      const [f, c] = await Promise.all([fetchForex(), fetchCrypto()]);
+      renderForex(f);
+      renderCrypto(c);
     }, 60_000);
   }
 
-  /* ---- Utility ---- */
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  // Expose
   window.initHomePage = initHomePage;
 
 })();

@@ -1,28 +1,28 @@
 /* ================================================================
-   FOOTER.CSS — Bottom Navigation Bar
+   FOOTER.CSS — Floating Pill Navigation (like reference image)
    ================================================================ */
 
 #app-footer {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: var(--footer-h);
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 100;
-  background: rgba(6, 10, 16, 0.80);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-top: 1px solid var(--border-glass);
-  box-shadow: 0 -1px 0 rgba(255,255,255,0.03), 0 -8px 32px rgba(0,0,0,0.25);
+  /* Floating pill — NOT full width */
+  background: #0c1828;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: var(--r-pill);
+  padding: 6px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 2px 8px  rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 .footer-nav {
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 6px;
-  padding: 8px 20px;
+  gap: 4px;
 }
 
 /* ---- Nav Button ---- */
@@ -32,109 +32,62 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  width: 88px;
+  gap: 3px;
+  width: 68px;
   height: 46px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
+  border-radius: 99px;
+  color: var(--text3);
   cursor: pointer;
-  transition: all var(--dur-mid) var(--ease);
+  transition: all 200ms var(--ease);
   font-family: inherit;
-  overflow: hidden;
-}
-
-.nav-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--accent-dim);
-  opacity: 0;
-  transition: opacity var(--dur-mid) ease;
 }
 
 .nav-icon {
-  width: 18px;
-  height: 18px;
-  transition: transform var(--dur-mid) var(--ease), color var(--dur-mid) ease;
-  position: relative;
-  z-index: 1;
+  width: 18px; height: 18px;
+  transition: transform 200ms var(--ease);
+  position: relative; z-index: 1;
 }
 
 .nav-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  transition: color var(--dur-mid) ease;
-  position: relative;
-  z-index: 1;
+  position: relative; z-index: 1;
+  transition: color 200ms ease;
 }
 
-/* Active indicator bar */
+/* Active indicator */
 .nav-indicator {
   position: absolute;
-  bottom: 0;
-  left: 50%;
+  bottom: 3px; left: 50%;
   transform: translateX(-50%) scaleX(0);
-  width: 28px;
-  height: 2px;
-  background: linear-gradient(90deg, #0ea5e9, #00d4ff);
+  width: 20px; height: 2px;
+  background: var(--accent);
   border-radius: 99px;
-  transition: transform var(--dur-mid) var(--ease);
-  box-shadow: 0 0 8px rgba(0,212,255,0.6);
+  transition: transform 200ms var(--ease);
+  box-shadow: 0 0 8px var(--accent);
 }
 
-/* ---- Hover State ---- */
+/* ---- Hover ---- */
 .nav-btn:hover {
-  color: var(--text-secondary);
-  border-color: var(--border-glass);
+  color: var(--text2);
+  background: rgba(255,255,255,0.05);
 }
+.nav-btn:hover .nav-icon { transform: translateY(-2px); }
+.nav-btn:active { transform: scale(0.95); }
 
-.nav-btn:hover::before {
-  opacity: 0.4;
-}
-
-.nav-btn:hover .nav-icon {
-  transform: translateY(-1px);
-}
-
-.nav-btn:active {
-  transform: scale(0.96);
-}
-
-/* ---- Active State ---- */
+/* ---- Active ---- */
 .nav-btn.active {
   color: var(--accent);
-  border-color: var(--border-accent);
+  background: rgba(26,189,212,0.12);
+  border-color: rgba(26,189,212,0.18);
 }
-
-.nav-btn.active::before {
-  opacity: 1;
-}
-
 .nav-btn.active .nav-icon {
   transform: translateY(-2px);
-  filter: drop-shadow(0 0 6px rgba(0,212,255,0.5));
+  filter: drop-shadow(0 0 5px rgba(26,189,212,0.5));
 }
-
-.nav-btn.active .nav-label {
-  color: var(--accent);
-}
-
-.nav-btn.active .nav-indicator {
-  transform: translateX(-50%) scaleX(1);
-}
-
-/* ---- Main content push ---- */
-#main-content {
-  position: fixed;
-  top: var(--header-h);
-  left: 0;
-  right: 0;
-  bottom: var(--footer-h);
-  z-index: 10;
-  overflow: hidden;
-}
+.nav-btn.active .nav-label { color: var(--accent); }
+.nav-btn.active .nav-indicator { transform: translateX(-50%) scaleX(1); }
